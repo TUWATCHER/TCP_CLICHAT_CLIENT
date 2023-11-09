@@ -33,7 +33,23 @@ static bool Terminator = false;
 
 void Register(int& __fd, const std::string& username, const string& password)
 {
-    bzero(clientRequest, sizeof(clientRequest));
+    std::cout << "Registering user!\n";
+    bzero(clientRequest, sizeof(clientRequest));    
+    strncpy(clientRequest, "001", sizeof(clientRequest));
+    ssize_t bytes = write(socket_file_descriptor, clientRequest, sizeof(clientRequest));
+    if (bytes >= 0)
+        {
+               std::cout << "Data was sent successfuly!\n";
+        }
+    
+    bzero(serverResponse, sizeof(serverResponse));
+    read(__fd, serverResponse, sizeof(serverResponse));
+    std::cout << serverResponse << std::endl;
+    if (strncmp("0010", serverResponse, 3) == 0)
+    {
+        std::cout << "User failed to Register!\n";                        
+    }
+    /*
     strcpy(clientRequest, username.c_str()); 
     std::cout << "Checking username...\n";
 
@@ -46,6 +62,7 @@ void Register(int& __fd, const std::string& username, const string& password)
     read(__fd, serverResponse, sizeof(serverResponse));
 
     std::cout << "Data received from server: " << serverResponse << std::endl;
+    */
 }
 
 void LoginMenu(bool& status)
@@ -74,19 +91,11 @@ void LoginMenu(bool& status)
         std::cout << "Closing application!\n";
         Terminator = true;
         break;
-    case 1:
-        std::cout << "Please enter username: ";
-        std::cin >> username;
-        std::cout << "Please enter password: ";
-        std::cin >> password;
+    case 1:        
         Register(socket_file_descriptor, username, password);
         break;
-    case 2:
-        std::cout << "Please enter username: ";
-        std::cin >> username;
-        std::cout << "Please enter password: ";
-        std::cin >> password;        
-        CreateUser(username, password, _UserDB);
+    case 2:         
+        
         break;
     default:
         std::cout << "Wrong statement!\n";
@@ -104,7 +113,7 @@ void ConnectServer(bool& status)
     }
 
     serveraddress.sin_family = AF_INET;
-    serveraddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serveraddress.sin_addr.s_addr = inet_addr("172.16.8.1");
     serveraddress.sin_port = htons(PORT);
     
     connection = connect(socket_file_descriptor, (struct sockaddr*)& serveraddress, sizeof(serveraddress));
@@ -113,7 +122,14 @@ void ConnectServer(bool& status)
         std::cout << "Failed to establish connectivity!\n";
         exit(1);
     }
-
+    else 
+    {
+        std::cout << "Connection with " << inet_ntoa(serveraddress.sin_addr)<< " has been established!\n";
+    }
+    bzero(serverResponse, sizeof(serverResponse));
+    read(socket_file_descriptor, serverResponse, sizeof(serverResponse));
+    std::cout << serverResponse << std::endl;
+    bzero(serverResponse, sizeof(serverResponse));
     while (!Terminator)
     {
         LoginMenu(status);

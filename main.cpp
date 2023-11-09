@@ -1,25 +1,9 @@
 #include <iostream>
-#include "Menu.h"
-
+#include "Client.h"
 
 int main()
 {
-    bool HasLoggedIn = false;    
-    vector<User> UserDataBase;
-    vector<Chat> ChatDataBase;
-    User* currentUser = nullptr;
-    
-    while (!Terminator)
-    {
-        if (HasLoggedIn)
-        {
-            UserMenu(ChatDataBase, UserDataBase, currentUser, HasLoggedIn);
-        }
-        else
-        {
-            LoginMenu(&currentUser, UserDataBase, HasLoggedIn);
-        }
-      
-    }
+    bool IsLoggedIn = false;
+    ConnectServer(IsLoggedIn);
     return 0;
 }
