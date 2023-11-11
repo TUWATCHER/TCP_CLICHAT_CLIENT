@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Site BuildName="Linux-g++"
+	BuildStamp="20231111-0906-Experimental"
+	Name="TOYBOX-00"
+	Generator="ctest-3.27.1"
+	CompilerName="/usr/bin/g++"
+	CompilerVersion="11.4.0"
+	OSName="Linux"
+	Hostname="TOYBOX-00"
+	OSRelease="6.2.0-36-generic"
+	OSVersion="#37~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Mon Oct  9 15:34:04 UTC 2"
+	OSPlatform="x86_64"
+	Is64Bits="1"
+	VendorString="GenuineIntel"
+	VendorID="Intel Corporation"
+	FamilyID="6"
+	ModelID="70"
+	ProcessorCacheSize="6144"
+	NumberOfLogicalCPU="2"
+	NumberOfPhysicalCPU="2"
+	TotalVirtualMemory="2139"
+	TotalPhysicalMemory="3871"
+	LogicalProcessorsPerPhysical="1"
+	ProcessorClockFrequency="2194.92"
+	>
+	<Testing>
+		<StartDateTime>Nov 11 12:06 MSK</StartDateTime>
+		<StartTestTime>1699693575</StartTestTime>
+		<TestList/>
+		<EndDateTime>Nov 11 12:06 MSK</EndDateTime>
+		<EndTestTime>1699693575</EndTestTime>
+		<ElapsedMinutes>0</ElapsedMinutes>
+	</Testing>
+</Site>

@@ -1,9 +1,8 @@
-#include <iostream>
 #include "Client.h"
 
 int main()
 {
-    bool IsLoggedIn = false;
-    ConnectServer(IsLoggedIn);
+    const char* address = "127.0.0.1";
+    Connect(address);
     return 0;
 }

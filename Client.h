@@ -10,130 +10,93 @@
 
 #define MESSAGE_LENGTH 1024
 #define PORT 7777
-#define CONNECTED 1
+#define ERROR -1
 
-using std::string;
-
-void ConnectServer(bool& status);
-void Register(int& __fd, const std::string& username, const string& password); 
-void Login();
-void Logout();
-void DeleteUser();
-void CreateMessage();
-void ShowMessage();
-void LoginMenu(bool& status);
-void UserMenu();
+void Connect(const char* address);
 
 int socket_file_descriptor;
-int connection;
-struct sockaddr_in serveraddress, client;
-char clientRequest[MESSAGE_LENGTH];
+int connection, activity;
+struct sockaddr_in serveraddress;
 char serverResponse[MESSAGE_LENGTH];
-static bool Terminator = false;
 
-void Register(int& __fd, const std::string& username, const string& password)
+void Connect(const char* address)
 {
-    std::cout << "Registering user!\n";
-    bzero(clientRequest, sizeof(clientRequest));    
-    strncpy(clientRequest, "001", sizeof(clientRequest));
-    ssize_t bytes = write(socket_file_descriptor, clientRequest, sizeof(clientRequest));
-    if (bytes >= 0)
-        {
-               std::cout << "Data was sent successfuly!\n";
-        }
-    
-    bzero(serverResponse, sizeof(serverResponse));
-    read(__fd, serverResponse, sizeof(serverResponse));
-    std::cout << serverResponse << std::endl;
-    if (strncmp("0010", serverResponse, 3) == 0)
-    {
-        std::cout << "User failed to Register!\n";                        
-    }
-    /*
-    strcpy(clientRequest, username.c_str()); 
-    std::cout << "Checking username...\n";
-
-    ssize_t bytes = write(__fd, clientRequest, sizeof(clientRequest));
-    if (bytes >= 0)
-    {
-        std::cout << "Data was sent successfuly!\n";
-    }
-    bzero(serverResponse, sizeof(serverResponse));
-    read(__fd, serverResponse, sizeof(serverResponse));
-
-    std::cout << "Data received from server: " << serverResponse << std::endl;
-    */
-}
-
-void LoginMenu(bool& status)
-{
-    string username, password;
-    int menuOperator = 0;
-    std::cout << "Welcome to CLI Chat, please choose your option:\n";
-    std::cout << "\t0 - Exit\n"
-        << "\t1 - Register\n"
-        << "\t2 - Login\n"
-        << "\t3 - Forgot Password\n";  
-      
-    while (!(std::cin >> menuOperator))
-    {
-
-        std::cin.clear();
-
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
-        std::cout << "Invalid input! Please try again with valid input: ";
-    }
-
-    switch (menuOperator)
-    {
-    case 0:
-        std::cout << "Closing application!\n";
-        Terminator = true;
-        break;
-    case 1:        
-        Register(socket_file_descriptor, username, password);
-        break;
-    case 2:         
-        
-        break;
-    default:
-        std::cout << "Wrong statement!\n";
-        break;
-    }
-}
-
-void ConnectServer(bool& status)
-{
+    // Creating socket
     socket_file_descriptor = socket(AF_INET, SOCK_STREAM, 0);
-    if (socket_file_descriptor == -1)
+    if (socket_file_descriptor == ERROR)
     {
-        std::cout << "Failed to create socket!\n";
-        exit(1);
+        perror("Failed to create socket!");
+        exit(EXIT_FAILURE);
     }
 
+    // Assigning server address
     serveraddress.sin_family = AF_INET;
-    serveraddress.sin_addr.s_addr = inet_addr("172.16.8.1");
+    serveraddress.sin_addr.s_addr = inet_addr(address);
     serveraddress.sin_port = htons(PORT);
     
+    // Connecting to server
     connection = connect(socket_file_descriptor, (struct sockaddr*)& serveraddress, sizeof(serveraddress));
-    if (connection == -1)
+    if (connection == ERROR)
     {
-        std::cout << "Failed to establish connectivity!\n";
-        exit(1);
+        perror("Failed to establish connectivity!");
+        exit(EXIT_FAILURE);
     }
+
     else 
     {
-        std::cout << "Connection with " << inet_ntoa(serveraddress.sin_addr)<< " has been established!\n";
+        std::cout << "Connection with " << inet_ntoa(serveraddress.sin_addr) << " has been established!\n";
     }
+
     bzero(serverResponse, sizeof(serverResponse));
-    read(socket_file_descriptor, serverResponse, sizeof(serverResponse));
+    recv(socket_file_descriptor, serverResponse, sizeof(serverResponse), 0);
     std::cout << serverResponse << std::endl;
+
     bzero(serverResponse, sizeof(serverResponse));
-    while (!Terminator)
+
+    while(true)
     {
-        LoginMenu(status);
+
+        fd_set reads;
+        FD_ZERO(&reads);
+        FD_SET(socket_file_descriptor, &reads);
+        FD_SET(0, &reads);
+
+        struct timeval timeout;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 100000;
+
+        activity = select(socket_file_descriptor+1, &reads, 0, 0, &timeout);
+        if (activity < 0)
+        {
+            perror("Select() error!");
+            exit(EXIT_FAILURE);            
+        }
+
+        if (FD_ISSET(socket_file_descriptor, &reads))        
+        {
+            char read[4096];
+            int bytes_received = recv(socket_file_descriptor, read, 4096, 0);
+            if (bytes_received < 1)
+            {
+                std::cout << "Connection closed by peer.\n";
+                break;
+            }
+
+            std::cout << "Received ("<< bytes_received << " bytes): "
+                        << read;
+        }
+
+        if(FD_ISSET(0, &reads))
+        {
+            char read[4096];
+            std::cout << "Enter your message!\n";
+            if (!fgets(read, 4096, stdin)) break;
+            int bytes_sent = send(socket_file_descriptor, read, strlen(read), 0);
+            std::cout << "Sent " << bytes_sent << " bytes\n";
+        }
     }
+
+    std::cout << "Closing socket...\n";
     close(socket_file_descriptor);
 
 }
